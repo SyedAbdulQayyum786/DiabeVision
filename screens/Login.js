@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, ActivityIndicator } from "react-native-paper"; 
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
+import { usernameState, fullnameState } from "../atoms/state";
+import { useRecoilState } from "recoil";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -12,57 +14,70 @@ const LoginScreen = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [userData, setUserData] = useState(null); // To store user data after login
-
+  const [username, setUsername] = useRecoilState(usernameState); 
+  const [fullname, setFullname] = useRecoilState(fullnameState);
+  const [isLoading, setIsLoading] = useState(false); 
   const handleLogin = async () => {
     setEmailError("");
     setPasswordError("");
-
-    // Validate email and password
+    setIsLoading(true); 
+    
     if (!email) {
       setEmailError("Email is required.");
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       setEmailError("Please enter a valid email.");
     }
-
+  
     if (!password) {
       setPasswordError("Password is required.");
     } else if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters long.");
     }
-
+  
     if (!emailError && !passwordError) {
       try {
-        // Attempt to login with email and password
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
-        // Fetch user data from Firestore after successful login
         const userDocRef = doc(db, "users", userCredential.user.uid);
         const userDoc = await getDoc(userDocRef);
-
+  
         if (userDoc.exists()) {
-          setUserData(userDoc.data());
-          Toast.show({
-            type: 'success',
-            text1: 'Login Success',
-            text2: 'User logged in successfully.',
-          });
+          const userData = userDoc.data();
           
-          navigation.navigate("Home", {
-            fullName: userData?.fullName,
-            username: userData?.username,
-          }); 
+          if (userData?.fullName && userData?.username) {
+            Toast.show({
+              type: "success",
+              text1: "Login Success",
+              text2: "User logged in successfully.",
+            });
+            setUsername(userData.username);
+            setFullname(userData.fullName);
+            navigation.navigate("Home");
+          } else {
+            Toast.show({
+              type: "error",
+              text1: "Incomplete User Data",
+              text2: "User data is missing required fields.",
+            });
+          }
         } else {
-          console.log("No such document!");
+          Toast.show({
+            type: "error",
+            text1: "User Not Found",
+            text2: "No user document found in Firestore.",
+          });
         }
       } catch (error) {
         console.log("Login failed", error.message);
         Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
+          type: "error",
+          text1: "Login Failed",
           text2: error.message,
         });
+      } finally {
+        setIsLoading(false); 
       }
+    } else {
+      setIsLoading(false); 
     }
   };
 
@@ -104,8 +119,17 @@ const LoginScreen = ({ navigation }) => {
       />
       {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-      <Button mode="contained" onPress={handleLogin} style={styles.loginButton}>
-        LOGIN
+      <Button 
+        mode="contained" 
+        onPress={handleLogin} 
+        style={styles.loginButton} 
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#fff" /> 
+        ) : (
+          "LOGIN"
+        )}
       </Button>
 
       <View style={styles.signupText}>
@@ -114,14 +138,6 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.signupLink}> Sign Up here</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Display user data if logged in */}
-      {/* {userData && (
-        <View style={styles.userDataContainer}>
-          <Text style={styles.userInfo}>Username: {userData.username}</Text>
-          <Text style={styles.userInfo}>Full Name: {userData.fullName}</Text>
-        </View>
-      )} */}
     </View>
   );
 };
@@ -166,17 +182,6 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginBottom: 10,
-  },
-  userDataContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#E5E5E5",
-    borderRadius: 5,
-    width: "100%",
-  },
-  userInfo: {
-    fontSize: 16,
-    color: "#3E3E7E",
   },
 });
 

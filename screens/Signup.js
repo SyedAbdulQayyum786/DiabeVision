@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, ActivityIndicator } from "react-native-paper"; 
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
@@ -15,6 +15,7 @@ const SignupScreen = ({ navigation }) => {
   const [dob, setDob] = useState("");
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); 
 
   const validateForm = () => {
     const newErrors = {};
@@ -44,6 +45,8 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignup = async () => {
     if (!validateForm()) return;
+
+    setIsLoading(true); 
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -79,6 +82,8 @@ const SignupScreen = ({ navigation }) => {
           text2: error.message,
         });
       }
+    } finally {
+      setIsLoading(false); 
     }
   };
 
@@ -148,8 +153,17 @@ const SignupScreen = ({ navigation }) => {
       />
       {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-      <Button mode="contained" onPress={handleSignup} style={styles.signupButton}>
-        Signup
+      <Button 
+        mode="contained" 
+        onPress={handleSignup} 
+        style={styles.signupButton} 
+        disabled={isLoading} 
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#fff" /> 
+        ) : (
+          "Signup"
+        )}
       </Button>
     </View>
   );

@@ -1,30 +1,81 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  DrawerLayoutAndroid,
+  ScrollView,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { about_text } from '../constants';
+import { useRecoilValue } from 'recoil';
+import { fullnameState, usernameState } from '../atoms/state';
 
-export default function Home({route}) {
-  const { fullName, username } = route.params; 
+export default function Home({ navigation }) {
+  const drawer = useRef(null);
+  const username = useRecoilValue(usernameState);
+  const fullname = useRecoilValue(fullnameState);
+  const avatarLetter = fullname?.charAt(0).toUpperCase();
 
-  const avatarLetter = username.charAt(0).toUpperCase();
+ 
+  const handleNavigation = (screenName) => {
+    drawer.current.closeDrawer();  
+    navigation.navigate(screenName);
+  };
+
+  const navigationView = () => (
+    <View style={styles.drawerContainer}>
+      <Text style={styles.drawerHeader}>MENU</Text>
+      <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('Home')}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Home Page</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('UploadImage')}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Upload Image</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Get Reports</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>DiabeVision</Text>
-      <View style={styles.card}>
-        <Text style={styles.welcomeText}>Welcome,</Text>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{avatarLetter}</Text>
-        </View>
-        <Text style={styles.username}>@{username}</Text>
-        <Text style={styles.subHeader}>Diabetic Retinopathy</Text>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={true}>
-          <Text style={styles.description}>{about_text}</Text>
-        </ScrollView>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Go To Menu</Text>
+    <DrawerLayoutAndroid
+      ref={drawer}
+      drawerWidth={250}
+      drawerPosition="left"
+      renderNavigationView={navigationView}
+    >
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => drawer.current.openDrawer()}
+        >
+          <Text style={styles.menuButtonText}>☰ Menu</Text>
         </TouchableOpacity>
+        <Text style={styles.header}>DiabeVision</Text>
+        <View style={styles.card}>
+          <Text style={styles.welcomeText}>Welcome,</Text>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
+          </View>
+          <Text style={styles.username}>@{username}</Text>
+          <Text style={styles.subHeader}>Diabetic Retinopathy</Text>
+          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={true}>
+            <Text style={styles.description}>{about_text}</Text>
+          </ScrollView>
+        </View>
       </View>
-    </View>
+    </DrawerLayoutAndroid>
   );
 }
 
@@ -33,8 +84,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#C3BDF3',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 20,
+  },
+  menuButton: {
+    alignSelf: 'flex-start',
+    padding: 10,
+    marginVertical: 10,
+  },
+  menuButtonText: {
+    fontSize: 18,
+    color: '#6C63FF',
+    fontWeight: 'bold',
   },
   header: {
     fontSize: 32,
@@ -84,26 +145,37 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     marginBottom: 10,
   },
-  scrollView: {
-    flex: 1, // Takes up all available space
-    width: '100%',
+  drawerContainer: {
+    flex: 1,
+    backgroundColor: '#C3BDF3',
+    padding: 20,
+  },
+  drawerHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
     marginBottom: 20,
   },
-  description: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  button: {
-    backgroundColor: '#3A2E9E',
+  drawerButton: {
+    backgroundColor: '#6C63FF',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    marginVertical: 5,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  drawerButtonText: {
     fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  iconButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  icon: {
+    marginRight: 10,
   },
 });
