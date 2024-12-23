@@ -253,13 +253,16 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#6C63FF',
-    padding: 15,
     borderRadius: 10,
+    width: '50%',
+    height: 50,
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   drawerContainer: {
     flex: 1,
