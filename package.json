@@ -12,18 +12,23 @@
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
     "@firebase/firestore": "^4.7.5",
-    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-firebase/storage": "^21.6.1",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.0",
     "axios": "^0.27.2",
-    "expo": "~52.0.18",
+    "base64-arraybuffer": "^1.0.2",
+    "expo": "~52.0.20",
     "expo-image-picker": "~16.0.3",
+    "expo-sharing": "~13.0.0",
     "expo-status-bar": "~2.0.0",
     "firebase": "^11.1.0",
+    "pdf-lib": "^1.17.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
+    "react-native-blob-util": "^0.21.2",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-get-random-values": "~1.11.0",
     "react-native-image-picker": "^7.2.3",
@@ -36,7 +41,8 @@
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
-    "recoil": "^0.7.7"
+    "recoil": "^0.7.7",
+    "rn-fetch-blob": "^0.12.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
