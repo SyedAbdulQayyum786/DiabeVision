@@ -74,6 +74,7 @@ const UploadImage = ({ navigation }) => {
       console.log('Image name:', result.assets);
       console.log('Image from gallery:', result.assets[0].uri);
       setImageUri(result.assets[0].uri);
+      setModalVisible(false);
     }
   };
   
@@ -172,7 +173,7 @@ const UploadImage = ({ navigation }) => {
             style={styles.drawerButtonText}
             onPress={() => handleNavigation('Home')}
           >
-            Home Page
+            Home
           </Text>
         </View>
       </TouchableOpacity>

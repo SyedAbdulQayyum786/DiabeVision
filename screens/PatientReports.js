@@ -1,17 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useState, useEffect,useRef } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert,DrawerLayoutAndroid } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { uidState } from "../atoms/state";
 import { useRecoilValue } from "recoil";
 import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore"; 
+import Icon from 'react-native-vector-icons/FontAwesome';
+import * as Sharing from 'expo-sharing';
 
-const PatientReports = () => {
+
+const PatientReports = ({navigation}) => {
   const [reports, setReports] = useState([]);
   const uid = useRecoilValue(uidState); 
+  const drawer = useRef(null);
+  const navigationView = () => (
+    <View style={styles.drawerContainer}>
+    <Text style={styles.drawerHeader}>MENU</Text>
+    <TouchableOpacity style={styles.drawerButton}>
+      <View style={styles.iconButtonContainer}>
+        <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
+        <Text style={styles.drawerButtonText} onPress={()=>navigation.navigate('Home')}>Home</Text>
+      </View>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.drawerButton}>
+      <View style={styles.iconButtonContainer}>
+        <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
+        <Text style={styles.drawerButtonText} onPress={() => navigation.navigate('UploadImage')}>Upload Image</Text>
+      </View>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.drawerButton}>
+      <View style={styles.iconButtonContainer}>
+        <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
+        <Text style={styles.drawerButtonText}>Get Reports</Text>
+      </View>
+    </TouchableOpacity>
+  </View>
+  );
 
-  // Fetch reports from Firestore
+  
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -29,20 +56,24 @@ const PatientReports = () => {
     fetchReports();
   }, []);
 
-  // Handle viewing the report
+
   const handleView = async (url) => {
     try {
       const fileUri = `${FileSystem.documentDirectory}${url.split("/").pop()}`;
       const downloadResumable = FileSystem.createDownloadResumable(url, fileUri);
       const { uri } = await downloadResumable.downloadAsync();
-      await FileSystem.openDocumentAsync(uri);
+  
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      } else {
+        Alert.alert("Sharing is not available on this device.");
+      }
     } catch (error) {
       console.error("Error viewing the report:", error);
       Alert.alert("Failed to view the report.");
     }
   };
 
-  // Handle printing the report
   const handlePrint = async (url) => {
     try {
       const fileUri = `${FileSystem.documentDirectory}${url.split("/").pop()}`;
@@ -74,7 +105,19 @@ const PatientReports = () => {
   );
 
   return (
+    <DrawerLayoutAndroid
+      ref={drawer}
+      drawerWidth={250}
+      drawerPosition="left"
+      renderNavigationView={navigationView}
+    >
     <View style={styles.container}>
+      <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => drawer.current.openDrawer()}
+              >
+                <Text style={styles.menuButtonText}>☰ Menu</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Patient Reports</Text>
       <FlatList
         data={reports}
@@ -82,6 +125,7 @@ const PatientReports = () => {
         renderItem={renderReport}
       />
     </View>
+    </DrawerLayoutAndroid>
   );
 };
 
@@ -89,7 +133,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: '#C3BDF3',
+  },
+  menuButton: {
+    alignSelf: 'flex-start',
+    padding: 10,
+    marginVertical: 10,
+  },
+  menuButtonText: {
+    fontSize: 18,
+    color: '#6C63FF',
+    fontWeight: 'bold',
+  },
+  drawerContainer: {
+    flex: 1,
+    backgroundColor: '#C3BDF3',
+    padding: 20,
+  },
+  drawerHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  drawerButton: {
+    backgroundColor: '#6C63FF',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  drawerButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 24,
@@ -118,6 +197,14 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#ffffff",
     fontWeight: "bold",
+  },
+  iconButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  icon: {
+    marginRight: 10,
   },
 });
 

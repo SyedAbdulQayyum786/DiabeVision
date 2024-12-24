@@ -30,7 +30,7 @@ export default function Home({ navigation }) {
       <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('Home')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText}>Home Page</Text>
+          <Text style={styles.drawerButtonText}>Home</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('UploadImage')}>
@@ -42,7 +42,7 @@ export default function Home({ navigation }) {
       <TouchableOpacity style={styles.drawerButton}>
         <View style={styles.iconButtonContainer}>
           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText}>Get Reports</Text>
+          <Text style={styles.drawerButtonText} onPress={()=> handleNavigation("PatientReports")}>Get Reports</Text>
         </View>
       </TouchableOpacity>
     </View>
