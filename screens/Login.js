@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
-import { usernameState, fullnameState,dobstate,emailstate } from "../atoms/state";
+import { usernameState, fullnameState,dobstate,emailstate,phoneState,uidState } from "../atoms/state";
 import { useRecoilState } from "recoil";
 
 const LoginScreen = ({ navigation }) => {
@@ -18,6 +18,8 @@ const LoginScreen = ({ navigation }) => {
   const [fullname, setFullname] = useRecoilState(fullnameState);
   const [dob, setDob] = useRecoilState(dobstate);
   const [useremail, setuserEmail] = useRecoilState(emailstate);
+  const [phonenumber, setPhoneNumber] = useRecoilState(phoneState);
+  const [uid, setUid] = useRecoilState(uidState); 
   const [isLoading, setIsLoading] = useState(false); 
   const handleLogin = async () => {
     setEmailError("");
@@ -55,6 +57,8 @@ const LoginScreen = ({ navigation }) => {
             setFullname(userData.fullName);
             setDob(userData?.dob);
             setuserEmail(userData?.email);
+            setPhoneNumber(userData?.phoneNumber);
+            setUid(userData?.uid);
             navigation.navigate("Home");
           } else {
             Toast.show({

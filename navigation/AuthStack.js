@@ -5,6 +5,7 @@ import SignupScreen from '../screens/Signup';
 import LandingScreen from '../screens/Landing';
 import Home from '../screens/Home';
 import UploadImage from '../screens/UploadImage';
+import PatientReports from '../screens/PatientReports';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ export default function AuthStack() {
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="UploadImage" component={UploadImage}/>
+      <Stack.Screen name="PatientReports" component={PatientReports} />
     </Stack.Navigator>
   );
 }

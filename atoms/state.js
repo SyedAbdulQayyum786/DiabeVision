@@ -21,3 +21,13 @@ export const emailstate = atom ({
   key:'emailstate',
   default: '',
 })
+
+export const phoneState = atom({
+  key:'phoneState',
+  default: '',
+})
+
+export const uidState = atom({
+  key:'uidState',
+  default: '',
+})

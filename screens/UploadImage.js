@@ -1,9 +1,7 @@
 import React, {  useRef, useState } from 'react';
-import {doc,updateDoc,arrayUnion} from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from '../firebaseConfig';
 import { PDFDocument,rgb } from 'pdf-lib';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import {
   View,
   Text,
@@ -18,10 +16,8 @@ import * as ImagePicker from 'expo-image-picker';
 import {Image} from 'react-native';
 import axios from 'axios';
 import { useRecoilValue } from 'recoil';
-import { fullnameState,usernameState,dobstate,emailstate } from '../atoms/state';
-import { encode } from 'base64-arraybuffer';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
+import { fullnameState,usernameState,dobstate,emailstate,phoneState,uidState } from '../atoms/state';
+import { encode as base64Encode } from 'base64-arraybuffer'; 
 
 const UploadImage = ({ navigation }) => {
   const drawer = useRef(null);
@@ -32,6 +28,8 @@ const UploadImage = ({ navigation }) => {
   const username = useRecoilValue(usernameState);
   const dob = useRecoilValue(dobstate);
   const email = useRecoilValue(emailstate);
+  const phoneNumber = useRecoilValue(phoneState);
+  const uid = useRecoilValue(uidState);
 
   const handleNavigation = (screenName) => {
     drawer.current.closeDrawer();
@@ -78,90 +76,91 @@ const UploadImage = ({ navigation }) => {
       setImageUri(result.assets[0].uri);
     }
   };
-
- const handleGenerateReport = async () => {
-  if (!imageUri) {
-    alert('Please select an image to generate report!');
-    return;
-  }
-  setIsLoading(true);
-
-  const formData = new FormData();
-  formData.append('file', {
-    uri: imageUri,
-    type: 'image/jpeg',
-    name: 'image.jpg',
-  });
-
-  try {
-    const response = await axios.post(
-      'https://e009-34-132-82-185.ngrok-free.app/predict/',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
-    );
-
-    const prediction = response.data.prediction;
-    const probabilities = response.data.all_probabilities;
-
-    // Create PDF
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 800]);
-    page.drawText("DiabeVision", { x: 50, y: 750, size: 30, color: rgb(0, 0, 1) });
-
-    // Add User Info
-    page.drawText(`Full Name: ${fullName}`, { x: 50, y: 700 });
-    page.drawText(`Email: ${email}`, { x: 50, y: 680 });
-    page.drawText(`Username: ${username}`, { x: 50, y: 660 });
-    page.drawText(`DOB: ${dob}`, { x: 50, y: 640 });
-
-    // Add Prediction Info
-    page.drawText("Prediction:", { x: 50, y: 600 });
-    page.drawText(`Class: ${prediction.class}`, { x: 50, y: 580 });
-    page.drawText(`Confidence: ${prediction.confidence}`, { x: 50, y: 560 });
-
-    // Save PDF to byte array
-    const pdfBytes = await pdfDoc.save();
-    const fileUri = `${FileSystem.documentDirectory}${username}_${Date.now()}.pdf`;
-
-    // Write the PDF to the file system
-    await RNFetchBlob.fs.writeFile(fileUri, pdfBytes, 'base64');
-
-    // Upload PDF to Firebase Storage
-    const storage = getStorage();
-    const storageRef = ref(storage, `reports/${username}_${Date.now()}.pdf`);
-    const pdfBase64 = await RNFetchBlob.fs.readFile(fileUri, 'base64');
-    const metadata = { contentType: 'application/pdf' };
-
-    await uploadString(storageRef, pdfBase64, 'base64', metadata);
-
-    // Get Download URL
-    const downloadURL = await getDownloadURL(storageRef);
-
-    // Update Firestore
-    const userDocRef = doc(db, "users", auth.currentUser.uid);
-    await updateDoc(userDocRef, {
-      reports: arrayUnion({
-        timestamp: new Date().toISOString(),
-        prediction: prediction.class,
-        confidence: prediction.confidence,
-        url: downloadURL,
-      }),
-    });
-
-    // Optionally Share the File
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri);
-    } else {
-      alert("PDF saved to device, but sharing is not available.");
+  
+  const handleGenerateReport = async () => {
+    if (!imageUri) {
+      alert('Please select an image to generate a report!');
+      return;
     }
+    setIsLoading(true);
+  
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+      page.drawText("DiabeVision", { x: 50, y: 750, size: 30, color: rgb(0, 0, 1) });
+      page.drawLine({ start: { x: 50, y: 740 }, end: { x: 550, y: 740 }, thickness: 1 });
+      page.drawText(`Full Name: ${fullName}`, { x: 50, y: 700 });
+      page.drawText(`Email: ${email}`, { x: 50, y: 680 });
+      page.drawText(`Username: ${username}`, { x: 50, y: 660 });
+      page.drawText(`DOB: ${dob}`, { x: 50, y: 640 });
+      page.drawText(`Phone Number: ${phoneNumber}`, { x: 50, y: 620 });
+      page.drawText("Prediction:", { x: 50, y: 600 });
+  
+      const pdfBytes = await pdfDoc.save();
+  
+      const base64Data = base64Encode(pdfBytes);
+  
+      const formData = new FormData();
+      formData.append('file', `data:application/pdf;base64,${base64Data}`);
+      formData.append('upload_preset', 'upload_preset'); 
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dzo0hotjl/upload`; 
+  
+      const response = await axios.post(cloudinaryUrl, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      if (response.data.secure_url) {
+        await updateFirestore(response.data.secure_url);
+        alert('Report generated and saved successfully.');
+      } else {
+        alert('Failed to upload report to Cloudinary.');
+      }
+    } catch (error) {
+      console.error("Error generating report:", error.message);
+      alert("An error occurred while generating the report.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const updateFirestore = async (downloadURL) => {
+    try {
+      const userDocRef = doc(db, 'users', uid); 
+      const docSnap = await getDoc(userDocRef);
+      
+      if (docSnap.exists()) {
+        await updateDoc(userDocRef, {
+          reports: arrayUnion({
+            date: new Date().toISOString(),
+            reportUrl: downloadURL,
+          }),
+        });
+      } else {
+        await setDoc(userDocRef, {
+          email: email,
+          fullName: fullName,
+          dob: dob,
+          phoneNumber: phoneNumber,
+          uid: uid,
+          username: username,
+          createdAt: new Date().toISOString(),
+          reports: [{
+            date: new Date().toISOString(),
+            reportUrl: downloadURL,
+          }],
+        });
+      }
+  
+      console.log('Document successfully updated/created!');
+    } catch (error) {
+      console.error('Error updating/creating document: ', error);
+      alert("An error occurred while updating Firestore.");
+    }
+  };
+  
 
-    alert("Report generated and saved successfully.");
-  } catch (error) {
-    console.error("Error generating report:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   const navigationView = () => (
     <View style={styles.drawerContainer}>
@@ -191,7 +190,7 @@ const UploadImage = ({ navigation }) => {
       <TouchableOpacity style={styles.drawerButton}>
         <View style={styles.iconButtonContainer}>
           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText}>Get Reports</Text>
+          <Text style={styles.drawerButtonText} onPress={()=>handleNavigation('PatientReports')}>Get Reports</Text>
         </View>
       </TouchableOpacity>
     </View>
