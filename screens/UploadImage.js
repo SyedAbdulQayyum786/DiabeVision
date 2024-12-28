@@ -9,14 +9,15 @@ import {
   TouchableOpacity,
   DrawerLayoutAndroid,
   Modal,
+  Alert
 } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as ImagePicker from 'expo-image-picker';
 import {Image} from 'react-native';
 import axios from 'axios';
-import { useRecoilValue } from 'recoil';
-import { fullnameState,usernameState,dobstate,emailstate,phoneState,uidState } from '../atoms/state';
+import { useRecoilValue,useRecoilState } from 'recoil';
+import { fullnameState,usernameState,dobstate,emailstate,phoneState,uidState} from '../atoms/state';
 import { encode as base64Encode } from 'base64-arraybuffer'; 
 
 const UploadImage = ({ navigation }) => {
@@ -30,11 +31,26 @@ const UploadImage = ({ navigation }) => {
   const email = useRecoilValue(emailstate);
   const phoneNumber = useRecoilValue(phoneState);
   const uid = useRecoilValue(uidState);
+  const [prediction, setPrediction] = useState('');
+  const [uid_temp,setUid] = useRecoilState(uidState);
 
   const handleNavigation = (screenName) => {
     drawer.current.closeDrawer();
     navigation.navigate(screenName);
   };
+
+   const handleLogout = () => {
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          onPress: () => {
+            setUid(""); 
+            navigation.navigate('Landing'); 
+          },
+        },
+      ]);
+    };
 
   const openCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -53,6 +69,7 @@ const UploadImage = ({ navigation }) => {
     if (!result.canceled) {
       console.log('Image from camera:', result.assets[0].uri);
       setImageUri(result.assets[0].uri);
+      setModalVisible(false);
     }
   };
 
@@ -71,8 +88,6 @@ const UploadImage = ({ navigation }) => {
     });
 
     if (!result.canceled) {
-      console.log('Image name:', result.assets);
-      console.log('Image from gallery:', result.assets[0].uri);
       setImageUri(result.assets[0].uri);
       setModalVisible(false);
     }
@@ -86,6 +101,21 @@ const UploadImage = ({ navigation }) => {
     setIsLoading(true);
   
     try {
+
+      const form_Data = new FormData();
+      form_Data.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'image.jpg',
+      });
+      const res = await axios.post(
+        'https://a90c-35-233-131-61.ngrok-free.app/predict/',
+        form_Data,
+        { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
+      );
+      const prediction = res.data.prediction.class;
+      console.log("reponse..........",res.data.prediction.class);
+      setPrediction(prediction);
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([600, 800]);
       page.drawText("DiabeVision", { x: 50, y: 750, size: 30, color: rgb(0, 0, 1) });
@@ -95,7 +125,7 @@ const UploadImage = ({ navigation }) => {
       page.drawText(`Username: ${username}`, { x: 50, y: 660 });
       page.drawText(`DOB: ${dob}`, { x: 50, y: 640 });
       page.drawText(`Phone Number: ${phoneNumber}`, { x: 50, y: 620 });
-      page.drawText("Prediction:", { x: 50, y: 600 });
+      page.drawText(`Prediction:" ${prediction}`, { x: 50, y: 600 });
   
       const pdfBytes = await pdfDoc.save();
   
@@ -115,6 +145,7 @@ const UploadImage = ({ navigation }) => {
       if (response.data.secure_url) {
         await updateFirestore(response.data.secure_url);
         alert('Report generated and saved successfully.');
+        navigation.navigate('PatientReports');
       } else {
         alert('Failed to upload report to Cloudinary.');
       }
@@ -150,6 +181,7 @@ const UploadImage = ({ navigation }) => {
           reports: [{
             date: new Date().toISOString(),
             reportUrl: downloadURL,
+            prediction: prediction,
           }],
         });
       }
@@ -194,6 +226,12 @@ const UploadImage = ({ navigation }) => {
           <Text style={styles.drawerButtonText} onPress={()=>handleNavigation('PatientReports')}>Get Reports</Text>
         </View>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Logout</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -205,12 +243,20 @@ const UploadImage = ({ navigation }) => {
       renderNavigationView={navigationView}
     >
       <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => drawer.current.openDrawer()}
-        >
-          <Text style={styles.menuButtonText}>☰ Menu</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+         style={styles.menuButton}
+         onPress={() => {
+           if (drawer.current) {
+             drawer.current.openDrawer(); 
+             console.log("Drawer opened");
+             // Ensure this function is called
+           } else {
+             console.error('Drawer ref is not set'); // Debugging fallback
+           }
+         }}
+       >
+         <Text style={styles.menuButtonText}>☰ Menu</Text>
+       </TouchableOpacity>
         <Text style={styles.header}>Upload Image</Text>
         <View style={styles.uploadCard}>
         <TouchableOpacity

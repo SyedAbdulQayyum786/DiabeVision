@@ -3,17 +3,28 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert,DrawerLayoutA
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { uidState } from "../atoms/state";
-import { useRecoilValue } from "recoil";
+import {  useRecoilState, useRecoilValue } from "recoil";
 import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore"; 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import * as Sharing from 'expo-sharing';
-
 
 const PatientReports = ({navigation}) => {
   const [reports, setReports] = useState([]);
   const uid = useRecoilValue(uidState); 
   const drawer = useRef(null);
+  const [uid_temp,setUid] = useRecoilState(uidState);
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        onPress: () => {
+          setUid(""); 
+          navigation.navigate('Landing')
+        },
+      },
+    ]);
+  };
   const navigationView = () => (
     <View style={styles.drawerContainer}>
     <Text style={styles.drawerHeader}>MENU</Text>
@@ -35,6 +46,12 @@ const PatientReports = ({navigation}) => {
         <Text style={styles.drawerButtonText}>Get Reports</Text>
       </View>
     </TouchableOpacity>
+    <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Logout</Text>
+        </View>
+      </TouchableOpacity>
   </View>
   );
 
@@ -57,21 +74,10 @@ const PatientReports = ({navigation}) => {
   }, []);
 
 
-  const handleView = async (url) => {
-    try {
-      const fileUri = `${FileSystem.documentDirectory}${url.split("/").pop()}`;
-      const downloadResumable = FileSystem.createDownloadResumable(url, fileUri);
-      const { uri } = await downloadResumable.downloadAsync();
-  
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
-      } else {
-        Alert.alert("Sharing is not available on this device.");
-      }
-    } catch (error) {
-      console.error("Error viewing the report:", error);
-      Alert.alert("Failed to view the report.");
-    }
+  const handleView = (prediction) => {
+    console.log(prediction);
+    
+   navigation.navigate('ReportDetails',{prediction});
   };
 
   const handlePrint = async (url) => {
@@ -79,12 +85,9 @@ const PatientReports = ({navigation}) => {
       const fileUri = `${FileSystem.documentDirectory}${url.split("/").pop()}`;
       const downloadResumable = FileSystem.createDownloadResumable(url, fileUri);
       const { uri } = await downloadResumable.downloadAsync();
-      const fileBase64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
+     
       await Print.printAsync({
-        html: `<iframe src="data:application/pdf;base64,${fileBase64}" style="width:100%;height:100%;"></iframe>`,
+        uri, 
       });
     } catch (error) {
       console.error("Error printing the report:", error);
@@ -95,7 +98,7 @@ const PatientReports = ({navigation}) => {
   const renderReport = ({ item, index }) => (
     <View style={styles.reportContainer}>
       <Text style={styles.reportName}>Report {index + 1}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => handleView(item.reportUrl)}>
+      <TouchableOpacity style={styles.button} onPress={() => handleView(item.prediction)}>
         <Text style={styles.buttonText}>VIEW</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={() => handlePrint(item.reportUrl)}>
@@ -112,18 +115,28 @@ const PatientReports = ({navigation}) => {
       renderNavigationView={navigationView}
     >
     <View style={styles.container}>
-      <TouchableOpacity
-                style={styles.menuButton}
-                onPress={() => drawer.current.openDrawer()}
-              >
-                <Text style={styles.menuButtonText}>☰ Menu</Text>
+         <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => {
+          if (drawer.current) {
+            drawer.current.openDrawer(); 
+          } else {
+            console.error('Drawer ref is not set'); 
+          }
+        }}
+      >
+        <Text style={styles.menuButtonText}>☰ Menu</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Patient Reports</Text>
-      <FlatList
-        data={reports}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderReport}
-      />
+      {reports.length === 0 ? (
+        <Text style={styles.noReportsText}>No reports to show</Text>
+      ) : (
+        <FlatList
+          data={reports}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderReport}
+        />
+      )}
     </View>
     </DrawerLayoutAndroid>
   );
@@ -205,6 +218,13 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 10,
+  },
+  noReportsText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#6C63FF",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
 

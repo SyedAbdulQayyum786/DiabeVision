@@ -6,23 +6,37 @@ import {
   TouchableOpacity,
   DrawerLayoutAndroid,
   ScrollView,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { about_text } from '../constants';
-import { useRecoilValue } from 'recoil';
-import { fullnameState, usernameState } from '../atoms/state';
+import { useRecoilValue,useRecoilState } from 'recoil';
+import { fullnameState, usernameState,uidState } from '../atoms/state';
 
 export default function Home({ navigation }) {
   const drawer = useRef(null);
   const username = useRecoilValue(usernameState);
   const fullname = useRecoilValue(fullnameState);
   const avatarLetter = fullname?.charAt(0).toUpperCase();
+  const [uid,setUid] = useRecoilState(uidState);
 
  
   const handleNavigation = (screenName) => {
-    drawer.current.closeDrawer();  
     navigation.navigate(screenName);
   };
+
+   const handleLogout = () => {
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          onPress: () => {
+            setUid(""); 
+           navigation.navigate('Landing');
+          },
+        },
+      ]);
+    };
 
   const navigationView = () => (
     <View style={styles.drawerContainer}>
@@ -45,6 +59,12 @@ export default function Home({ navigation }) {
           <Text style={styles.drawerButtonText} onPress={()=> handleNavigation("PatientReports")}>Get Reports</Text>
         </View>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Logout</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -56,12 +76,18 @@ export default function Home({ navigation }) {
       renderNavigationView={navigationView}
     >
       <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => drawer.current.openDrawer()}
-        >
-          <Text style={styles.menuButtonText}>☰ Menu</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.menuButton}
+  onPress={() => {
+    if (drawer.current) {
+      drawer.current.openDrawer(); // Ensure this function is called
+    } else {
+      console.error('Drawer ref is not set'); // Debugging fallback
+    }
+  }}
+>
+  <Text style={styles.menuButtonText}>☰ Menu</Text>
+</TouchableOpacity>
         <Text style={styles.header}>DiabeVision</Text>
         <View style={styles.card}>
           <Text style={styles.welcomeText}>Welcome,</Text>
