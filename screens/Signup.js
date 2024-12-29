@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { TextInput, Button, ActivityIndicator } from "react-native-paper"; 
+import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 const SignupScreen = ({ navigation }) => {
   const [username, setUserName] = useState("");
@@ -13,9 +14,13 @@ const SignupScreen = ({ navigation }) => {
   const [phonenumber, setPhoneNumber] = useState("");
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
-
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -46,10 +51,14 @@ const SignupScreen = ({ navigation }) => {
   const handleSignup = async () => {
     if (!validateForm()) return;
 
-    setIsLoading(true); 
+    setIsLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       await updateProfile(userCredential.user, { displayName: fullName });
 
       await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -83,7 +92,7 @@ const SignupScreen = ({ navigation }) => {
         });
       }
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
 
@@ -130,7 +139,9 @@ const SignupScreen = ({ navigation }) => {
         mode="outlined"
         error={!!errors.phonenumber}
       />
-      {errors.phonenumber && <Text style={styles.errorText}>{errors.phonenumber}</Text>}
+      {errors.phonenumber && (
+        <Text style={styles.errorText}>{errors.phonenumber}</Text>
+      )}
 
       <TextInput
         label="Date of Birth"
@@ -142,25 +153,37 @@ const SignupScreen = ({ navigation }) => {
       />
       {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
 
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={(text) => setPassword(text)}
-        secureTextEntry
-        style={styles.input}
-        mode="outlined"
-        error={!!errors.password}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          label="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          secureTextEntry={!passwordVisible}
+          style={styles.passwordInput}
+          mode="outlined"
+          error={!!errors.password}
+        />
+        <TouchableOpacity
+          onPress={togglePasswordVisibility}
+          style={styles.iconContainer}
+        >
+          <Icon
+            name={passwordVisible ? "eye-slash" : "eye"}
+            size={20}
+            color="gray"
+          />
+        </TouchableOpacity>
+      </View>
       {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-      <Button 
-        mode="contained" 
-        onPress={handleSignup} 
-        style={styles.signupButton} 
-        disabled={isLoading} 
+      <Button
+        mode="contained"
+        onPress={handleSignup}
+        style={styles.signupButton}
+        disabled={isLoading}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" /> 
+          <ActivityIndicator size="small" color="#fff" />
         ) : (
           "Signup"
         )}
@@ -191,6 +214,20 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     marginBottom: 5,
+  },
+  passwordContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  passwordInput: {
+    flex: 1,
+    marginBottom: 5,
+  },
+  iconContainer: {
+    position: "absolute",
+    right: 15,
+    top: 18,
   },
   signupButton: {
     marginTop: 10,

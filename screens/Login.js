@@ -7,6 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
 import { usernameState, fullnameState,dobstate,emailstate,phoneState,uidState } from "../atoms/state";
 import { useRecoilState } from "recoil";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -108,23 +109,27 @@ const LoginScreen = ({ navigation }) => {
       />
       {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-      <TextInput
-        label="PASSWORD"
-        value={password}
-        onChangeText={(text) => setPassword(text)}
-        secureTextEntry={!passwordVisible}
-        style={[styles.input, { paddingRight: 40 }]}
-        mode="outlined"
-        error={!!passwordError}
-        right={
-          <TextInput.Icon 
-            name={passwordVisible ? "eye-off" : "eye"} 
-            onPress={togglePasswordVisibility} 
-            color="black" 
-            size={24} 
-          />
-        }
-      />
+      <View style={{ width: "100%", position: "relative", marginBottom: 15 }}>
+  <TextInput
+    label="PASSWORD"
+    value={password}
+    onChangeText={(text) => setPassword(text)}
+    secureTextEntry={!passwordVisible}
+    style={styles.input}
+    mode="outlined"
+    error={!!passwordError}
+  />
+  <TouchableOpacity
+    onPress={togglePasswordVisibility}
+    style={styles.iconContainer}
+  >
+    <Icon
+      name={passwordVisible ? "eye-slash" : "eye"}
+      size={20}
+      color="gray"
+    />
+  </TouchableOpacity>
+</View>
       {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
       <Button 
@@ -190,6 +195,11 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginBottom: 10,
+  },
+  iconContainer: {
+    position: "absolute",
+    right: 10,
+    top: "30%",
   },
 });
 

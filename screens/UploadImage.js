@@ -31,7 +31,7 @@ const UploadImage = ({ navigation }) => {
   const email = useRecoilValue(emailstate);
   const phoneNumber = useRecoilValue(phoneState);
   const uid = useRecoilValue(uidState);
-  const [prediction, setPrediction] = useState('');
+  const [prediction_class, setPrediction] = useState('');
   const [uid_temp,setUid] = useRecoilState(uidState);
 
   const handleNavigation = (screenName) => {
@@ -109,13 +109,15 @@ const UploadImage = ({ navigation }) => {
         name: 'image.jpg',
       });
       const res = await axios.post(
-        'https://a90c-35-233-131-61.ngrok-free.app/predict/',
+        'https://133e-34-145-246-54.ngrok-free.app/predict/',
         form_Data,
         { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
       );
       const prediction = res.data.prediction.class;
-      console.log("reponse..........",res.data.prediction.class);
+      console.log("reponse..........",(prediction));
       setPrediction(prediction);
+      console.log("prediction_class",prediction_class);
+      
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([600, 800]);
       page.drawText("DiabeVision", { x: 50, y: 750, size: 30, color: rgb(0, 0, 1) });
@@ -143,8 +145,9 @@ const UploadImage = ({ navigation }) => {
       });
   
       if (response.data.secure_url) {
-        await updateFirestore(response.data.secure_url);
+        await updateFirestore(response.data.secure_url,prediction);
         alert('Report generated and saved successfully.');
+        setImageUri(null);
         navigation.navigate('PatientReports');
       } else {
         alert('Failed to upload report to Cloudinary.');
@@ -157,7 +160,7 @@ const UploadImage = ({ navigation }) => {
     }
   };
   
-  const updateFirestore = async (downloadURL) => {
+  const updateFirestore = async (downloadURL,prediction) => {
     try {
       const userDocRef = doc(db, 'users', uid); 
       const docSnap = await getDoc(userDocRef);
@@ -167,6 +170,7 @@ const UploadImage = ({ navigation }) => {
           reports: arrayUnion({
             date: new Date().toISOString(),
             reportUrl: downloadURL,
+            prediction: prediction,
           }),
         });
       } else {

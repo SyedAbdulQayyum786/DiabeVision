@@ -80,9 +80,9 @@ export default function Home({ navigation }) {
   style={styles.menuButton}
   onPress={() => {
     if (drawer.current) {
-      drawer.current.openDrawer(); // Ensure this function is called
+      drawer.current.openDrawer();
     } else {
-      console.error('Drawer ref is not set'); // Debugging fallback
+      console.error('Drawer ref is not set'); 
     }
   }}
 >
