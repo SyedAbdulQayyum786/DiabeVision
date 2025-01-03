@@ -124,7 +124,7 @@ const LoginScreen = ({ navigation }) => {
     style={styles.iconContainer}
   >
     <Icon
-      name={passwordVisible ? "eye-slash" : "eye"}
+      name={passwordVisible ? "eye" : "eye-slash"}
       size={20}
       color="gray"
     />

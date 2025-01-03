@@ -1,4 +1,4 @@
-import React, {  useRef, useState } from 'react';
+import React, {  useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from '../firebaseConfig';
 import { PDFDocument,rgb } from 'pdf-lib';
@@ -33,7 +33,7 @@ const UploadImage = ({ navigation }) => {
   const uid = useRecoilValue(uidState);
   const [prediction_class, setPrediction] = useState('');
   const [uid_temp,setUid] = useRecoilState(uidState);
-
+  
   const handleNavigation = (screenName) => {
     drawer.current.closeDrawer();
     navigation.navigate(screenName);
@@ -202,32 +202,32 @@ const UploadImage = ({ navigation }) => {
   const navigationView = () => (
     <View style={styles.drawerContainer}>
       <Text style={styles.drawerHeader}>MENU</Text>
-      <TouchableOpacity style={styles.drawerButton}>
+      <TouchableOpacity style={styles.drawerButton}   onPress={() => handleNavigation('Home')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
           <Text
             style={styles.drawerButtonText}
-            onPress={() => handleNavigation('Home')}
+          
           >
             Home
           </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton}>
+      <TouchableOpacity style={styles.drawerButton}  onPress={() => handleNavigation('UploadImage')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
           <Text
             style={styles.drawerButtonText}
-            onPress={() => handleNavigation('UploadImage')}
+           
           >
             Upload Image
           </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton}>
+      <TouchableOpacity style={styles.drawerButton} onPress={()=>handleNavigation('PatientReports')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText} onPress={()=>handleNavigation('PatientReports')}>Get Reports</Text>
+          <Text style={styles.drawerButtonText} >Get Reports</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
@@ -239,8 +239,10 @@ const UploadImage = ({ navigation }) => {
     </View>
   );
 
+
   return (
     <DrawerLayoutAndroid
+      key={Math.random()}
       ref={drawer}
       drawerWidth={250}
       drawerPosition="left"
@@ -253,7 +255,7 @@ const UploadImage = ({ navigation }) => {
            if (drawer.current) {
              drawer.current.openDrawer(); 
              console.log("Drawer opened");
-             // Ensure this function is called
+            
            } else {
              console.error('Drawer ref is not set'); // Debugging fallback
            }
@@ -332,7 +334,7 @@ const styles = StyleSheet.create({
   },
   menuButtonText: {
     fontSize: 18,
-    color: '#6C63FF',
+    color: 'black',
     fontWeight: 'bold',
   },
   header: {

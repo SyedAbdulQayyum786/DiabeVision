@@ -1,18 +1,20 @@
-import React, { useState, useEffect,useRef } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert,DrawerLayoutAndroid } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, DrawerLayoutAndroid, ActivityIndicator } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { uidState } from "../atoms/state";
-import {  useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore"; 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const PatientReports = ({navigation}) => {
   const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // State for loading indicator
   const uid = useRecoilValue(uidState); 
   const drawer = useRef(null);
-  const [uid_temp,setUid] = useRecoilState(uidState);
+  const [uid_temp, setUid] = useRecoilState(uidState);
+
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
@@ -25,37 +27,37 @@ const PatientReports = ({navigation}) => {
       },
     ]);
   };
+
   const navigationView = () => (
     <View style={styles.drawerContainer}>
-    <Text style={styles.drawerHeader}>MENU</Text>
-    <TouchableOpacity style={styles.drawerButton}>
-      <View style={styles.iconButtonContainer}>
-        <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
-        <Text style={styles.drawerButtonText} onPress={()=>navigation.navigate('Home')}>Home</Text>
-      </View>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.drawerButton}>
-      <View style={styles.iconButtonContainer}>
-        <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
-        <Text style={styles.drawerButtonText} onPress={() => navigation.navigate('UploadImage')}>Upload Image</Text>
-      </View>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.drawerButton}>
-      <View style={styles.iconButtonContainer}>
-        <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-        <Text style={styles.drawerButtonText}>Get Reports</Text>
-      </View>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
+      <Text style={styles.drawerHeader}>MENU</Text>
+      <TouchableOpacity style={styles.drawerButton}  onPress={() => navigation.navigate('Home')}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Home</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton} onPress={() => navigation.navigate('UploadImage')}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText} >Upload Image</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton}>
+        <View style={styles.iconButtonContainer}>
+          <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
+          <Text style={styles.drawerButtonText}>Get Reports</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
         <View style={styles.iconButtonContainer}>
           <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
           <Text style={styles.drawerButtonText}>Logout</Text>
         </View>
       </TouchableOpacity>
-  </View>
+    </View>
   );
 
-  
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -68,16 +70,16 @@ const PatientReports = ({navigation}) => {
         }
       } catch (error) {
         console.error("Error fetching reports: ", error);
+      } finally {
+        setIsLoading(false); 
       }
     };
     fetchReports();
   }, []);
 
-
   const handleView = (prediction) => {
     console.log(prediction);
-    
-   navigation.navigate('ReportDetails',{prediction});
+    navigation.navigate('ReportDetails', { prediction });
   };
 
   const handlePrint = async (url) => {
@@ -85,7 +87,6 @@ const PatientReports = ({navigation}) => {
       const fileUri = `${FileSystem.documentDirectory}${url.split("/").pop()}`;
       const downloadResumable = FileSystem.createDownloadResumable(url, fileUri);
       const { uri } = await downloadResumable.downloadAsync();
-     
       await Print.printAsync({
         uri, 
       });
@@ -109,35 +110,38 @@ const PatientReports = ({navigation}) => {
 
   return (
     <DrawerLayoutAndroid
+      key={Math.random()}
       ref={drawer}
       drawerWidth={250}
       drawerPosition="left"
       renderNavigationView={navigationView}
     >
-    <View style={styles.container}>
-         <TouchableOpacity
-        style={styles.menuButton}
-        onPress={() => {
-          if (drawer.current) {
-            drawer.current.openDrawer(); 
-          } else {
-            console.error('Drawer ref is not set'); 
-          }
-        }}
-      >
-        <Text style={styles.menuButtonText}>☰ Menu</Text>
-      </TouchableOpacity>
-      <Text style={styles.title}>Patient Reports</Text>
-      {reports.length === 0 ? (
-        <Text style={styles.noReportsText}>No reports to show</Text>
-      ) : (
-        <FlatList
-          data={reports}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderReport}
-        />
-      )}
-    </View>
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => {
+            if (drawer.current) {
+              drawer.current.openDrawer(); 
+            } else {
+              console.error('Drawer ref is not set'); 
+            }
+          }}
+        >
+          <Text style={styles.menuButtonText}>☰ Menu</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Patient Reports</Text>
+        {isLoading ? ( // Show ActivityIndicator while loading reports
+          <ActivityIndicator size="large" color="#4f46e5" style={styles.loader} />
+        ) : reports.length === 0 ? (
+          <Text style={styles.noReportsText}>No reports to show</Text>
+        ) : (
+          <FlatList
+            data={reports}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderReport}
+          />
+        )}
+      </View>
     </DrawerLayoutAndroid>
   );
 };
@@ -155,7 +159,7 @@ const styles = StyleSheet.create({
   },
   menuButtonText: {
     fontSize: 18,
-    color: '#6C63FF',
+    color: 'black',
     fontWeight: 'bold',
   },
   drawerContainer: {
@@ -225,6 +229,11 @@ const styles = StyleSheet.create({
     color: "#6C63FF",
     textAlign: "center",
     marginTop: 20,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

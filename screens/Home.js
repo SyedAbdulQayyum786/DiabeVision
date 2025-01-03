@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ export default function Home({ navigation }) {
   const avatarLetter = fullname?.charAt(0).toUpperCase();
   const [uid,setUid] = useRecoilState(uidState);
 
- 
   const handleNavigation = (screenName) => {
     navigation.navigate(screenName);
   };
@@ -53,10 +52,10 @@ export default function Home({ navigation }) {
           <Text style={styles.drawerButtonText}>Upload Image</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton}>
+      <TouchableOpacity style={styles.drawerButton}  onPress={()=> handleNavigation("PatientReports")}>
         <View style={styles.iconButtonContainer}>
           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText} onPress={()=> handleNavigation("PatientReports")}>Get Reports</Text>
+          <Text style={styles.drawerButtonText}>Get Reports</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
@@ -70,7 +69,8 @@ export default function Home({ navigation }) {
 
   return (
     <DrawerLayoutAndroid
-      ref={drawer}
+     key={Math.random()}
+     ref={drawer}
       drawerWidth={250}
       drawerPosition="left"
       renderNavigationView={navigationView}
@@ -80,9 +80,11 @@ export default function Home({ navigation }) {
   style={styles.menuButton}
   onPress={() => {
     if (drawer.current) {
-      drawer.current.openDrawer();
+      console.log(drawer.current);
+      
+      drawer.current.openDrawer(); // Ensure this function is called
     } else {
-      console.error('Drawer ref is not set'); 
+      console.error('Drawer ref is not set'); // Debugging fallback
     }
   }}
 >
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
   },
   menuButtonText: {
     fontSize: 18,
-    color: '#6C63FF',
+    color: 'black',
     fontWeight: 'bold',
   },
   header: {
