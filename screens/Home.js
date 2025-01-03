@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef,useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { about_text } from '../constants';
 import { useRecoilValue,useRecoilState } from 'recoil';
 import { fullnameState, usernameState,uidState } from '../atoms/state';
+import { ActivityIndicator } from 'react-native-paper';
 
 export default function Home({ navigation }) {
   const drawer = useRef(null);
@@ -19,10 +20,7 @@ export default function Home({ navigation }) {
   const fullname = useRecoilValue(fullnameState);
   const avatarLetter = fullname?.charAt(0).toUpperCase();
   const [uid,setUid] = useRecoilState(uidState);
-
-  const handleNavigation = (screenName) => {
-    navigation.navigate(screenName);
-  };
+  const [isLoading, setIsLoading] = useState(true);
 
    const handleLogout = () => {
       Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -40,19 +38,19 @@ export default function Home({ navigation }) {
   const navigationView = () => (
     <View style={styles.drawerContainer}>
       <Text style={styles.drawerHeader}>MENU</Text>
-      <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('Home')}>
+      <TouchableOpacity style={styles.drawerButton} onPress={() => navigation.navigate('Home')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
           <Text style={styles.drawerButtonText}>Home</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton} onPress={() => handleNavigation('UploadImage')}>
+      <TouchableOpacity style={styles.drawerButton} onPress={() => navigation.navigate('UploadImage')}>
         <View style={styles.iconButtonContainer}>
           <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
           <Text style={styles.drawerButtonText}>Upload Image</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton}  onPress={()=> handleNavigation("PatientReports")}>
+      <TouchableOpacity style={styles.drawerButton}  onPress={()=> navigation.navigate("PatientReports")}>
         <View style={styles.iconButtonContainer}>
           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
           <Text style={styles.drawerButtonText}>Get Reports</Text>
@@ -67,24 +65,35 @@ export default function Home({ navigation }) {
     </View>
   );
 
+   useEffect(() => {
+      
+      const timeout = setTimeout(() => {
+        setIsLoading(false);   
+      }, 2000); 
+      
+  
+      return () => clearTimeout(timeout);
+    }, []);  
+
   return (
     <DrawerLayoutAndroid
      key={Math.random()}
      ref={drawer}
-      drawerWidth={250}
-      drawerPosition="left"
-      renderNavigationView={navigationView}
+     drawerWidth={250}
+     drawerPosition="left"
+     renderNavigationView={navigationView}
     >
+        {isLoading ? (
+              <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+            ) : (
       <View style={styles.container}>
       <TouchableOpacity
   style={styles.menuButton}
   onPress={() => {
     if (drawer.current) {
-      console.log(drawer.current);
-      
-      drawer.current.openDrawer(); // Ensure this function is called
+      drawer.current.openDrawer(); 
     } else {
-      console.error('Drawer ref is not set'); // Debugging fallback
+      console.error('Drawer ref is not set'); 
     }
   }}
 >
@@ -102,7 +111,7 @@ export default function Home({ navigation }) {
             <Text style={styles.description}>{about_text}</Text>
           </ScrollView>
         </View>
-      </View>
+      </View>)}
     </DrawerLayoutAndroid>
   );
 }
@@ -205,5 +214,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 10,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

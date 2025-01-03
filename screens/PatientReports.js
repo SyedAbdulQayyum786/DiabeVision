@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, DrawerLayoutAndroid, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, DrawerLayoutAndroid } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { uidState } from "../atoms/state";
@@ -7,10 +7,11 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore"; 
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { ActivityIndicator } from 'react-native-paper';
 
 const PatientReports = ({navigation}) => {
   const [reports, setReports] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // State for loading indicator
+  const [isLoading, setIsLoading] = useState(true); 
   const uid = useRecoilValue(uidState); 
   const drawer = useRef(null);
   const [uid_temp, setUid] = useRecoilState(uidState);
@@ -58,9 +59,15 @@ const PatientReports = ({navigation}) => {
     </View>
   );
 
+ 
   useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);   
+    }, 2000); 
+
     const fetchReports = async () => {
       try {
+        setIsLoading(true);
         const docRef = doc(db, "users", uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -116,6 +123,9 @@ const PatientReports = ({navigation}) => {
       drawerPosition="left"
       renderNavigationView={navigationView}
     >
+        {isLoading ? (
+        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+      ) : (
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.menuButton}
@@ -141,7 +151,7 @@ const PatientReports = ({navigation}) => {
             renderItem={renderReport}
           />
         )}
-      </View>
+      </View>)}
     </DrawerLayoutAndroid>
   );
 };

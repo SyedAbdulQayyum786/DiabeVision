@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   DrawerLayoutAndroid,
   Modal,
-  Alert
+  Alert,
+
 } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -24,7 +25,7 @@ const UploadImage = ({ navigation }) => {
   const drawer = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [imageUri,setImageUri] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(true); 
   const fullName = useRecoilValue(fullnameState);
   const username = useRecoilValue(usernameState);
   const dob = useRecoilValue(dobstate);
@@ -33,12 +34,8 @@ const UploadImage = ({ navigation }) => {
   const uid = useRecoilValue(uidState);
   const [prediction_class, setPrediction] = useState('');
   const [uid_temp,setUid] = useRecoilState(uidState);
-  
-  const handleNavigation = (screenName) => {
-    drawer.current.closeDrawer();
-    navigation.navigate(screenName);
-  };
 
+  
    const handleLogout = () => {
       Alert.alert("Logout", "Are you sure you want to logout?", [
         { text: "Cancel", style: "cancel" },
@@ -200,66 +197,66 @@ const UploadImage = ({ navigation }) => {
 
 
   const navigationView = () => (
-    <View style={styles.drawerContainer}>
-      <Text style={styles.drawerHeader}>MENU</Text>
-      <TouchableOpacity style={styles.drawerButton}   onPress={() => handleNavigation('Home')}>
-        <View style={styles.iconButtonContainer}>
-          <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text
-            style={styles.drawerButtonText}
-          
-          >
-            Home
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton}  onPress={() => handleNavigation('UploadImage')}>
-        <View style={styles.iconButtonContainer}>
-          <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text
-            style={styles.drawerButtonText}
-           
-          >
-            Upload Image
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton} onPress={()=>handleNavigation('PatientReports')}>
-        <View style={styles.iconButtonContainer}>
-          <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText} >Get Reports</Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
-        <View style={styles.iconButtonContainer}>
-          <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
-          <Text style={styles.drawerButtonText}>Logout</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+     <View style={styles.drawerContainer}>
+       <Text style={styles.drawerHeader}>MENU</Text>
+       <TouchableOpacity style={styles.drawerButton}  onPress={() => navigation.navigate('Home')}>
+         <View style={styles.iconButtonContainer}>
+           <Icon name="home" size={20} color="#FFFFFF" style={styles.icon} />
+           <Text style={styles.drawerButtonText}>Home</Text>
+         </View>
+       </TouchableOpacity>
+       <TouchableOpacity style={styles.drawerButton} onPress={() => navigation.navigate('UploadImage')}>
+         <View style={styles.iconButtonContainer}>
+           <Icon name="image" size={20} color="#FFFFFF" style={styles.icon} />
+           <Text style={styles.drawerButtonText} >Upload Image</Text>
+         </View>
+       </TouchableOpacity>
+       <TouchableOpacity style={styles.drawerButton} onPress={()=> navigation.navigate("PatientReports")}>
+         <View style={styles.iconButtonContainer}>
+           <Icon name="file" size={20} color="#FFFFFF" style={styles.icon} />
+           <Text style={styles.drawerButtonText}>Get Reports</Text>
+         </View>
+       </TouchableOpacity>
+       <TouchableOpacity style={styles.drawerButton} onPress={handleLogout}>
+         <View style={styles.iconButtonContainer}>
+           <Icon name="sign-out" size={20} color="#FFFFFF" style={styles.icon} />
+           <Text style={styles.drawerButtonText}>Logout</Text>
+         </View>
+       </TouchableOpacity>
+     </View>
+   );
+ 
+   useEffect(() => {
+    
+    const timeout = setTimeout(() => {
+      setIsLoading(false);   
+    }, 2000); 
+    
 
+    return () => clearTimeout(timeout);
+  }, []);  
 
   return (
-    <DrawerLayoutAndroid
-      key={Math.random()}
-      ref={drawer}
-      drawerWidth={250}
-      drawerPosition="left"
-      renderNavigationView={navigationView}
-    >
+     <DrawerLayoutAndroid
+          key={Math.random()}
+          ref={drawer}
+          drawerWidth={250}
+          drawerPosition="left"
+          renderNavigationView={navigationView}
+        >
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+      ) : (
       <View style={styles.container}>
           <TouchableOpacity
          style={styles.menuButton}
          onPress={() => {
-           if (drawer.current) {
-             drawer.current.openDrawer(); 
-             console.log("Drawer opened");
-            
-           } else {
-             console.error('Drawer ref is not set'); // Debugging fallback
-           }
-         }}
+          if (drawer.current) {
+            drawer.current.openDrawer(); 
+          } else {
+            console.error('Drawer ref is not set'); 
+          }
+        }}
        >
          <Text style={styles.menuButtonText}>☰ Menu</Text>
        </TouchableOpacity>
@@ -314,7 +311,7 @@ const UploadImage = ({ navigation }) => {
             </View>
           </View>
         </Modal>
-      </View>
+      </View>)}
     </DrawerLayoutAndroid>
   );
 };
@@ -450,6 +447,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
