@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   menuButton: {
+    marginTop:50,
     alignSelf: 'flex-start',
     padding: 10,
     marginVertical: 10,
@@ -188,6 +189,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   drawerHeader: {
+    marginTop:30,
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
@@ -220,4 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  description:{
+    textAlign:'justify',
+  }
 });

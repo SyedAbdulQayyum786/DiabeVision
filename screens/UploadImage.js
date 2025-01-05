@@ -26,6 +26,7 @@ const UploadImage = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [imageUri,setImageUri] = useState(null);
   const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading_temp,setIsLoading_temp]=useState(false);
   const fullName = useRecoilValue(fullnameState);
   const username = useRecoilValue(usernameState);
   const dob = useRecoilValue(dobstate);
@@ -95,10 +96,9 @@ const UploadImage = ({ navigation }) => {
       alert('Please select an image to generate a report!');
       return;
     }
-    setIsLoading(true);
+    setIsLoading_temp(true);
   
     try {
-
       const form_Data = new FormData();
       form_Data.append('file', {
         uri: imageUri,
@@ -106,34 +106,58 @@ const UploadImage = ({ navigation }) => {
         name: 'image.jpg',
       });
       const res = await axios.post(
-        'https://133e-34-145-246-54.ngrok-free.app/predict/',
+        'https://3c3f-34-138-224-86.ngrok-free.app/predict/',
         form_Data,
         { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
       );
+  
       const prediction = res.data.prediction.class;
-      console.log("reponse..........",(prediction));
       setPrediction(prediction);
-      console.log("prediction_class",prediction_class);
-      
+      const report_text = res.data.professional_paragraph;
+  
+      // Create PDF
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([600, 800]);
-      page.drawText("DiabeVision", { x: 50, y: 750, size: 30, color: rgb(0, 0, 1) });
-      page.drawLine({ start: { x: 50, y: 740 }, end: { x: 550, y: 740 }, thickness: 1 });
-      page.drawText(`Full Name: ${fullName}`, { x: 50, y: 700 });
-      page.drawText(`Email: ${email}`, { x: 50, y: 680 });
-      page.drawText(`Username: ${username}`, { x: 50, y: 660 });
-      page.drawText(`DOB: ${dob}`, { x: 50, y: 640 });
-      page.drawText(`Phone Number: ${phoneNumber}`, { x: 50, y: 620 });
-      page.drawText(`Prediction:" ${prediction}`, { x: 50, y: 600 });
+      const { height } = page.getSize();
+      let currentY = height - 50; 
   
+      page.drawText("DiabeVision", { x: 50, y: currentY, size: 30, color: rgb(0, 0, 1) });
+      currentY -= 20;
+      page.drawLine({ start: { x: 50, y: currentY }, end: { x: 550, y: currentY }, thickness: 1 });
+      currentY -= 30;
+  
+      const userDetails = [
+        `Full Name: ${fullName}`,
+        `Email: ${email}`,
+        `Username: ${username}`,
+        `DOB: ${dob}`,
+        `Phone Number: ${phoneNumber}`,
+        `Prediction: ${prediction}`,
+      ];
+  
+      userDetails.forEach((detail) => {
+        page.drawText(detail, { x: 50, y: currentY, size: 12, color: rgb(0, 0, 0) });
+        currentY -= 20;
+      });
+  
+      currentY -= 10;
+      const formattedText = report_text.match(/.{1,90}(\s|$)|\S+(\s|$)/g); 
+      page.drawText("Report:", { x: 50, y: currentY, size: 14, color: rgb(0, 0, 0) });
+      currentY -= 20;
+      formattedText.forEach((line) => {
+        page.drawText(line.trim(), { x: 50, y: currentY, size: 12, color: rgb(0, 0, 0) });
+        currentY -= 18; 
+      });
+  
+      
       const pdfBytes = await pdfDoc.save();
-  
       const base64Data = base64Encode(pdfBytes);
   
+     
       const formData = new FormData();
       formData.append('file', `data:application/pdf;base64,${base64Data}`);
-      formData.append('upload_preset', 'upload_preset'); 
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dzo0hotjl/upload`; 
+      formData.append('upload_preset', 'upload_preset');
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dzo0hotjl/upload`;
   
       const response = await axios.post(cloudinaryUrl, formData, {
         headers: {
@@ -142,7 +166,7 @@ const UploadImage = ({ navigation }) => {
       });
   
       if (response.data.secure_url) {
-        await updateFirestore(response.data.secure_url,prediction);
+        await updateFirestore(response.data.secure_url, prediction, report_text);
         alert('Report generated and saved successfully.');
         setImageUri(null);
         navigation.navigate('PatientReports');
@@ -153,11 +177,12 @@ const UploadImage = ({ navigation }) => {
       console.error("Error generating report:", error.message);
       alert("An error occurred while generating the report.");
     } finally {
-      setIsLoading(false);
+      setIsLoading_temp(false);
     }
   };
   
-  const updateFirestore = async (downloadURL,prediction) => {
+  
+  const updateFirestore = async (downloadURL,prediction,report_text) => {
     try {
       const userDocRef = doc(db, 'users', uid); 
       const docSnap = await getDoc(userDocRef);
@@ -168,6 +193,7 @@ const UploadImage = ({ navigation }) => {
             date: new Date().toISOString(),
             reportUrl: downloadURL,
             prediction: prediction,
+            report_text:report_text,
           }),
         });
       } else {
@@ -183,6 +209,7 @@ const UploadImage = ({ navigation }) => {
             date: new Date().toISOString(),
             reportUrl: downloadURL,
             prediction: prediction,
+            report_text:report_text,
           }],
         });
       }
@@ -276,7 +303,7 @@ const UploadImage = ({ navigation }) => {
   )}
 </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText} onPress={()=>handleGenerateReport()}> {isLoading ? (
+            <Text style={styles.buttonText} onPress={()=>handleGenerateReport()}> {isLoading_temp ? (
                       <ActivityIndicator size="small" color="#fff" /> 
                     ) : (
                       "Generate Report"
@@ -325,6 +352,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   menuButton: {
+    marginTop:50,
     alignSelf: 'flex-start',
     padding: 10,
     marginVertical: 10,
@@ -382,6 +410,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   drawerHeader: {
+    marginTop:30,
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',

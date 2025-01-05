@@ -84,9 +84,9 @@ const PatientReports = ({navigation}) => {
     fetchReports();
   }, []);
 
-  const handleView = (prediction) => {
-    console.log(prediction);
-    navigation.navigate('ReportDetails', { prediction });
+  const handleView = (prediction,report_text)=> {
+
+    navigation.navigate('ReportDetails', { prediction ,report_text});
   };
 
   const handlePrint = async (url) => {
@@ -106,7 +106,7 @@ const PatientReports = ({navigation}) => {
   const renderReport = ({ item, index }) => (
     <View style={styles.reportContainer}>
       <Text style={styles.reportName}>Report {index + 1}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => handleView(item.prediction)}>
+      <TouchableOpacity style={styles.button} onPress={() => handleView(item.prediction,item.report_text)}>
         <Text style={styles.buttonText}>VIEW</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={() => handlePrint(item.reportUrl)}>
@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#C3BDF3',
   },
   menuButton: {
+    marginTop:50,
     alignSelf: 'flex-start',
     padding: 10,
     marginVertical: 10,
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   drawerHeader: {
+    marginTop:30,
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
