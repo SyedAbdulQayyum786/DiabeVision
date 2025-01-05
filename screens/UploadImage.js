@@ -245,7 +245,7 @@ const UploadImage = ({ navigation }) => {
           renderNavigationView={navigationView}
         >
       {isLoading ? (
-        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  
       ) : (
       <View style={styles.container}>
           <TouchableOpacity

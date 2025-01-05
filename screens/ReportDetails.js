@@ -80,7 +80,7 @@ export default function ReportDetails({route,navigation}) {
           renderNavigationView={navigationView}
         >
           {isLoading ? (
-                  <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+                  <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  
                 ) : (
     <View style={styles.container}>
        <TouchableOpacity
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#C3BDF3', // Light purple background
+    backgroundColor: '#C3BDF3', 
   },
   menuButton: {
     alignSelf: 'flex-start',
@@ -160,15 +160,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   detailsContainer: {
-    width: '100%', // Full width of the screen
+    width: '100%', 
     padding: 20,
-    backgroundColor: '#FFFFFF', // White container background
-    borderRadius: 10, // Rounded corners
-    shadowColor: '#000', // Shadow color
-    shadowOffset: { width: 0, height: 2 }, // Shadow offset
-    shadowOpacity: 0.1, // Shadow opacity
-    shadowRadius: 4, // Shadow blur radius
-    elevation: 5, // Shadow for Android
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 10,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4,
+    elevation: 5, 
   },
   detail: {
     fontSize: 16,

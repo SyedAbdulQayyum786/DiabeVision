@@ -124,7 +124,7 @@ const PatientReports = ({navigation}) => {
       renderNavigationView={navigationView}
     >
         {isLoading ? (
-        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  // Show loading indicator while waiting
+        <ActivityIndicator size="large" color="#6C63FF" style={styles.loader} />  
       ) : (
       <View style={styles.container}>
         <TouchableOpacity
@@ -140,7 +140,7 @@ const PatientReports = ({navigation}) => {
           <Text style={styles.menuButtonText}>☰ Menu</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Patient Reports</Text>
-        {isLoading ? ( // Show ActivityIndicator while loading reports
+        {isLoading ? ( 
           <ActivityIndicator size="large" color="#4f46e5" style={styles.loader} />
         ) : reports.length === 0 ? (
           <Text style={styles.noReportsText}>No reports to show</Text>
