@@ -34,8 +34,8 @@ const SignupScreen = ({ navigation }) => {
     }
     if (!phonenumber) {
       newErrors.phonenumber = "Phone number is required.";
-    } else if (!/^\d{10}$/.test(phonenumber)) {
-      newErrors.phonenumber = "Enter a valid 10-digit phone number.";
+    } else if (!/^\d{11}$/.test(phonenumber)) {
+      newErrors.phonenumber = "Enter a valid 11-digit phone number.";
     }
     if (!dob) newErrors.dob = "Date of birth is required.";
     if (!password) {

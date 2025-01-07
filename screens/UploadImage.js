@@ -106,7 +106,7 @@ const UploadImage = ({ navigation }) => {
         name: 'image.jpg',
       });
       const res = await axios.post(
-        'https://3c3f-34-138-224-86.ngrok-free.app/predict/',
+        'https://58e9-34-106-61-49.ngrok-free.app/predict/',
         form_Data,
         { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
       );
@@ -115,45 +115,132 @@ const UploadImage = ({ navigation }) => {
       setPrediction(prediction);
       const report_text = res.data.professional_paragraph;
   
-      // Create PDF
+      // Create PDF with professional layout
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([600, 800]);
-      const { height } = page.getSize();
-      let currentY = height - 50; 
+      const { height, width } = page.getSize();
   
-      page.drawText("DiabeVision", { x: 50, y: currentY, size: 30, color: rgb(0, 0, 1) });
-      currentY -= 20;
-      page.drawLine({ start: { x: 50, y: currentY }, end: { x: 550, y: currentY }, thickness: 1 });
-      currentY -= 30;
+      // Add pink background with rounded corners
+      page.drawRectangle({
+        x: 10,
+        y: 10,
+        width: width - 40,
+        height: height - 40,
+        color: rgb(1, 0.9, 0.9),
+        borderColor: rgb(0.8, 0.8, 0.8),
+        borderWidth: 1,
+      //  rotate: degrees(0),
+      //  borderRadius: 20,
+      });
   
+      // Add title
+      page.drawText("DiabeVision", {
+        x: width / 2 - 50,
+        y: height - 80,
+        size: 24,
+        color: rgb(0, 0, 0),
+      });
+  
+      // Left side - User Information
+      let currentY = height - 120;
+      const leftMargin = 40;
       const userDetails = [
         `Full Name: ${fullName}`,
         `Email: ${email}`,
         `Username: ${username}`,
         `DOB: ${dob}`,
         `Phone Number: ${phoneNumber}`,
-        `Prediction: ${prediction}`,
       ];
   
       userDetails.forEach((detail) => {
-        page.drawText(detail, { x: 50, y: currentY, size: 12, color: rgb(0, 0, 0) });
-        currentY -= 20;
+        page.drawText(detail, {
+          x: leftMargin,
+          y: currentY,
+          size: 12,
+          color: rgb(0, 0, 0),
+        });
+        currentY -= 25;
       });
   
-      currentY -= 10;
-      const formattedText = report_text.match(/.{1,90}(\s|$)|\S+(\s|$)/g); 
-      page.drawText("Report:", { x: 50, y: currentY, size: 14, color: rgb(0, 0, 0) });
-      currentY -= 20;
-      formattedText.forEach((line) => {
-        page.drawText(line.trim(), { x: 50, y: currentY, size: 12, color: rgb(0, 0, 0) });
-        currentY -= 18; 
-      });
-  
+    
+      const imageResponse = await fetch(imageUri);
+      const imageBytes = await imageResponse.arrayBuffer();
+      const image = await pdfDoc.embedJpg(imageBytes);
       
+
+      const rectX = width / 2 + 20; 
+      const offset = 20; 
+      const rectY = height - 240 + offset; 
+      const rectWidth = (width / 2) - 80;
+      const rectHeight = 100; 
+      
+    
+      const imageDims = image.scale(Math.min(rectWidth / image.width, rectHeight / image.height));
+      
+    
+      const imageX = rectX + (rectWidth - imageDims.width) / 2;
+      const imageY = rectY - (rectHeight - imageDims.height) / 2;
+      
+      page.drawImage(image, {
+        x: imageX,
+        y: imageY,
+        width: imageDims.width,
+        height: imageDims.height,
+      });
+  
+    
+      currentY = height - 280;
+      page.drawLine({
+        start: { x: 40, y: currentY },
+        end: { x: width - 40, y: currentY },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+  
+     
+      currentY -= 40;
+      page.drawText("Predicted Class", {
+        x: width/2 - 50,
+        y: currentY,
+        size: 16,
+        color: rgb(0, 0, 0),
+      });
+  
+      currentY -= 30;
+      page.drawText(prediction, {
+        x: width/2 - prediction.length * 3,
+        y: currentY,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+  
+     
+      currentY -= 20;
+      page.drawLine({
+        start: { x: 40, y: currentY },
+        end: { x: width - 40, y: currentY },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+  
+    
+      currentY -= 40;
+      const formattedText = report_text.match(/.{1,80}(\s|$)|\S+(\s|$)/g);
+      formattedText.forEach((line) => {
+        if (currentY > 40) { 
+          page.drawText(line.trim(), {
+            x: 40,
+            y: currentY,
+            size: 12,
+            color: rgb(0, 0, 0),
+          });
+          currentY -= 20;
+        }
+      });
+  
       const pdfBytes = await pdfDoc.save();
       const base64Data = base64Encode(pdfBytes);
   
-     
       const formData = new FormData();
       formData.append('file', `data:application/pdf;base64,${base64Data}`);
       formData.append('upload_preset', 'upload_preset');
