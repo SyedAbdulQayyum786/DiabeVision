@@ -106,7 +106,7 @@ const UploadImage = ({ navigation }) => {
         name: 'image.jpg',
       });
       const res = await axios.post(
-        'https://58e9-34-106-61-49.ngrok-free.app/predict/',
+        'https://0683-34-86-188-210.ngrok-free.app/predict/',
         form_Data,
         { headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' } }
       );
@@ -121,16 +121,17 @@ const UploadImage = ({ navigation }) => {
       const { height, width } = page.getSize();
   
       // Add pink background with rounded corners
+      const rect_Width = width - 80; 
+      const rect_X = ((width - rect_Width) / 2 )+7 ; 
+      
       page.drawRectangle({
-        x: 10,
+        x: rect_X,
         y: 10,
-        width: width - 40,
+        width: rect_Width,
         height: height - 40,
         color: rgb(1, 0.9, 0.9),
         borderColor: rgb(0.8, 0.8, 0.8),
         borderWidth: 1,
-      //  rotate: degrees(0),
-      //  borderRadius: 20,
       });
   
       // Add title
@@ -143,7 +144,7 @@ const UploadImage = ({ navigation }) => {
   
       // Left side - User Information
       let currentY = height - 120;
-      const leftMargin = 40;
+      const leftMargin = 60;
       const userDetails = [
         `Full Name: ${fullName}`,
         `Email: ${email}`,
@@ -178,7 +179,7 @@ const UploadImage = ({ navigation }) => {
       const imageDims = image.scale(Math.min(rectWidth / image.width, rectHeight / image.height));
       
     
-      const imageX = rectX + (rectWidth - imageDims.width) / 2;
+      const imageX = (rectX + (rectWidth - imageDims.width) / 2 )+ 5;
       const imageY = rectY - (rectHeight - imageDims.height) / 2;
       
       page.drawImage(image, {
@@ -188,16 +189,19 @@ const UploadImage = ({ navigation }) => {
         height: imageDims.height,
       });
   
-    
+     // Align the lines with the rectangle's edges
+     const lineStartX = rect_X; // Same as the rectangle's left edge
+     const lineEndX = rect_X + rect_Width;
+     
       currentY = height - 280;
       page.drawLine({
-        start: { x: 40, y: currentY },
-        end: { x: width - 40, y: currentY },
+        start: { x: lineStartX, y: currentY },
+        end: { x: lineEndX, y: currentY },
         thickness: 1,
         color: rgb(0, 0, 0),
       });
-  
-     
+
+      
       currentY -= 40;
       page.drawText("Predicted Class", {
         x: width/2 - 50,
@@ -215,10 +219,10 @@ const UploadImage = ({ navigation }) => {
       });
   
      
-      currentY -= 20;
+      currentY -= 10;
       page.drawLine({
-        start: { x: 40, y: currentY },
-        end: { x: width - 40, y: currentY },
+        start: { x: lineStartX, y: currentY },
+        end: { x: lineEndX, y: currentY },
         thickness: 1,
         color: rgb(0, 0, 0),
       });
@@ -229,7 +233,7 @@ const UploadImage = ({ navigation }) => {
       formattedText.forEach((line) => {
         if (currentY > 40) { 
           page.drawText(line.trim(), {
-            x: 40,
+            x: 60,
             y: currentY,
             size: 12,
             color: rgb(0, 0, 0),

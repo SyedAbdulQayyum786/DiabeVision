@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 34,
     fontWeight: "bold",
+    marginTop:80,
     marginBottom: 10,
     color: "#3E3E7E",
   },
